@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software or hardware design, please cite it as below."
+authors:
+  - family-names: Baude
+    given-names: Alexis
+title: "Optic-One: Open-Source AR Computing Platform"
+version: 1.0.0
+doi: "" # Tu colleras ton DOI ici une fois reçu
+date-released: 2026-02-16
+url: "https://github.com/alexisbaude/Optic-One"
