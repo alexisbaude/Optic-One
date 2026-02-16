@@ -1,13 +1,17 @@
 #!/bin/bash
-# Script d'installation pour Smart Glasses OS
-# Optimisé pour Raspberry Pi 3
+# Optic One Installation Script
+# Optimized for Raspberry Pi 3 Model B+
 
-echo "=== Smart Glasses OS - Installation ==="
+set -e
+
+echo "========================================="
+echo "Optic One - Installation Script"
+echo "========================================="
 echo ""
 
-# Vérifie qu'on est sur Raspberry Pi OS
+# Verify Raspberry Pi OS
 if [ ! -f /etc/rpi-issue ]; then
-    echo "⚠️  Warning: This doesn't appear to be Raspberry Pi OS"
+    echo "WARNING: This does not appear to be Raspberry Pi OS"
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -15,12 +19,12 @@ if [ ! -f /etc/rpi-issue ]; then
     fi
 fi
 
-echo "1. Mise à jour du système..."
+echo "Step 1/9: Updating system packages..."
 sudo apt update
 sudo apt upgrade -y
 
 echo ""
-echo "2. Installation des dépendances système..."
+echo "Step 2/9: Installing system dependencies..."
 sudo apt install -y \
     python3-pip \
     python3-venv \
@@ -37,82 +41,59 @@ sudo apt install -y \
     i2c-tools \
     python3-smbus
 
-# Active I2C pour l'écran OLED
 echo ""
-echo "3. Configuration I2C..."
+echo "Step 3/9: Configuring I2C interface..."
 if ! grep -q "^i2c-dev" /etc/modules; then
     echo "i2c-dev" | sudo tee -a /etc/modules
 fi
 
-# Active I2C dans config.txt
 if ! grep -q "^dtparam=i2c_arm=on" /boot/config.txt; then
     echo "dtparam=i2c_arm=on" | sudo tee -a /boot/config.txt
 fi
 
-# Donne les permissions I2C à l'utilisateur
 sudo usermod -a -G i2c $USER
 
 echo ""
-echo "4. Création de l'environnement virtuel Python..."
-cd ~/smart_glasses_os
+echo "Step 4/9: Creating Python virtual environment..."
+cd ~/optic-one
 python3 -m venv venv
 source venv/bin/activate
 
 echo ""
-echo "5. Installation des packages Python..."
-
-# PIL/Pillow pour les images
+echo "Step 5/9: Installing Python packages..."
 pip install --upgrade pip
-pip install Pillow
-
-# Luma.OLED pour l'écran
-pip install luma.oled
-
-# OpenCV pour la caméra (version optimisée pour Pi)
-pip install opencv-python-headless
-
-# PyAudio pour le microphone
-pip install pyaudio
-
-# Requests pour l'API
-pip install requests
-
-# PyYAML pour la config
-pip install pyyaml
-
-# PSUtil pour monitoring
-pip install psutil
+pip install -r requirements.txt
 
 echo ""
-echo "6. Installation de Whisper (pour reconnaissance vocale)..."
-echo "⚠️  Note: Whisper peut être lourd pour Pi 3."
-echo "   Modèle 'tiny' recommandé (défini dans config.yaml)"
-read -p "Installer Whisper? (y/n) " -n 1 -r
+echo "Step 6/9: Installing Whisper (voice recognition)..."
+echo "NOTE: Whisper models can be resource-intensive on Pi 3"
+echo "      The 'tiny' model is recommended (configured in config.yaml)"
+read -p "Install Whisper? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     pip install openai-whisper
 else
-    echo "Skipping Whisper - voice recognition will be in simulation mode"
+    echo "Skipping Whisper - voice recognition will run in simulation mode"
 fi
 
 echo ""
-echo "7. Installation d'Ollama..."
-echo "Ollama doit être installé séparément:"
+echo "Step 7/9: Installing Ollama..."
+echo "Ollama provides local AI inference capabilities"
 echo ""
 echo "  curl -fsSL https://ollama.com/install.sh | sh"
 echo ""
-read -p "Installer Ollama maintenant? (y/n) " -n 1 -r
+read -p "Install Ollama now? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     curl -fsSL https://ollama.com/install.sh | sh
     
     echo ""
-    echo "Téléchargement du modèle Llama 3.2 (1B)..."
+    echo "Downloading Llama 3.2 (1B) model..."
     ollama pull llama3.2:1b
     
     echo ""
-    echo "Téléchargement du modèle vision LLaVA (7B)..."
-    read -p "Télécharger aussi le modèle vision? (recommandé, ~4GB) (y/n) " -n 1 -r
+    echo "Downloading LLaVA (7B) vision model..."
+    read -p "Download vision model? (recommended, ~4GB) (y/n) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         ollama pull llava:7b
@@ -120,18 +101,18 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 echo ""
-echo "8. Configuration du service systemd..."
-cat > smart-glasses.service << EOF
+echo "Step 8/9: Configuring systemd service..."
+cat > optic-one.service << EOF
 [Unit]
-Description=Smart Glasses OS
+Description=Optic One Wearable Computing Platform
 After=network.target
 
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=/home/$USER/smart_glasses_os
-Environment="PATH=/home/$USER/smart_glasses_os/venv/bin"
-ExecStart=/home/$USER/smart_glasses_os/venv/bin/python main.py
+WorkingDirectory=/home/$USER/optic-one
+Environment="PATH=/home/$USER/optic-one/venv/bin"
+ExecStart=/home/$USER/optic-one/venv/bin/python main.py
 Restart=on-failure
 RestartSec=10
 
@@ -139,38 +120,38 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
 
-sudo mv smart-glasses.service /etc/systemd/system/
+sudo mv optic-one.service /etc/systemd/system/
 sudo systemctl daemon-reload
 
 echo ""
-echo "9. Vérification de la configuration..."
-
-# Test I2C
-echo "Détection des périphériques I2C:"
+echo "Step 9/9: Verifying configuration..."
+echo "Detecting I2C devices:"
 i2cdetect -y 1
 
 echo ""
-echo "=== Installation terminée! ==="
+echo "========================================="
+echo "Installation Complete"
+echo "========================================="
 echo ""
-echo "Prochaines étapes:"
+echo "Next Steps:"
 echo ""
-echo "1. Redémarrer le Pi pour activer I2C:"
+echo "1. Reboot to activate I2C:"
 echo "   sudo reboot"
 echo ""
-echo "2. Après le redémarrage, démarrer Ollama:"
+echo "2. After reboot, start Ollama:"
 echo "   ollama serve &"
 echo ""
-echo "3. Tester le système:"
-echo "   cd ~/smart_glasses_os"
+echo "3. Test the system:"
+echo "   cd ~/optic-one"
 echo "   source venv/bin/activate"
-echo "   python main.py"
+echo "   python main.py --demo"
 echo ""
-echo "4. Activer le démarrage automatique (optionnel):"
-echo "   sudo systemctl enable smart-glasses"
-echo "   sudo systemctl start smart-glasses"
+echo "4. Enable auto-start (optional):"
+echo "   sudo systemctl enable optic-one"
+echo "   sudo systemctl start optic-one"
 echo ""
-echo "Configuration de votre écran OLED:"
-echo "  - Éditez config.yaml pour configurer l'adresse I2C"
-echo "  - Adresse commune: 0x3C ou 0x3D"
-echo "  - Détectez avec: i2cdetect -y 1"
+echo "Configuration:"
+echo "  Edit config.yaml to match your hardware"
+echo "  I2C addresses: Use 'i2cdetect -y 1' to find OLED address"
+echo "  Common addresses: 0x3C or 0x3D"
 echo ""

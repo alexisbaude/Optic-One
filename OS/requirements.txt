@@ -1,0 +1,25 @@
+# Optic One - Python Dependencies
+# Optimized for Raspberry Pi 3 Model B+
+
+# Image Processing and Display
+Pillow>=10.0.0
+luma.oled>=3.12.0
+
+# Computer Vision
+opencv-python-headless>=4.8.0
+
+# Audio Processing and Voice Recognition
+pyaudio>=0.2.13
+openai-whisper>=20230918
+
+# API and Network
+requests>=2.31.0
+
+# Configuration Management
+PyYAML>=6.0
+
+# System Monitoring
+psutil>=5.9.0
+
+# Scientific Computing
+numpy>=1.24.0

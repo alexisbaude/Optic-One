@@ -1,24 +1,24 @@
-# Configuration pour Smart Glasses OS
-# Raspberry Pi 3 - Optimisé pour ressources limitées
+# Optic One Configuration
+# Optimized for Raspberry Pi 3 Model B+
 
 hardware:
   # OLED Display Configuration
   display:
-    type: "SSD1306"  # Recommandé: SSD1306 128x64 I2C (bon compromis qualité/prix)
+    type: "SSD1306"
     width: 128
     height: 64
     i2c_address: 0x3C
     i2c_bus: 1
-    rotation: 0  # 0, 90, 180, 270
+    rotation: 0
     
   # Camera Configuration
   camera:
     enabled: true
-    resolution: [640, 480]  # Réduit pour économiser ressources
-    framerate: 15  # Limité pour économiser CPU
+    resolution: [640, 480]
+    framerate: 15
     device: "/dev/video0"
     
-  # Microphone Configuration (pour reconnaissance vocale)
+  # Microphone Configuration
   microphone:
     enabled: true
     sample_rate: 16000
@@ -29,26 +29,26 @@ ai:
   # Ollama Configuration
   ollama:
     base_url: "http://localhost:11434"
-    model: "llama3.2:1b"  # Modèle léger pour Pi 3
+    model: "llama3.2:1b"
     timeout: 30
-    max_tokens: 256  # Limité pour économiser ressources
+    max_tokens: 256
     temperature: 0.7
     
-  # Vision Model (pour analyse d'images)
+  # Vision Model Configuration
   vision:
-    model: "llava:7b"  # Modèle vision léger
+    model: "llava:7b"
     enabled: true
     
-  # Whisper pour reconnaissance vocale
+  # Whisper Configuration
   whisper:
-    model: "tiny"  # tiny, base, small (tiny recommandé pour Pi 3)
-    language: "fr"
+    model: "tiny"
+    language: "en"
 
 system:
   # Resource Management
   resources:
     max_cpu_percent: 80
-    max_ram_mb: 700  # Pi 3 a 1GB RAM, laisse ~300MB pour le système
+    max_ram_mb: 700
     enable_throttling: true
     
   # Cache Settings
@@ -57,10 +57,10 @@ system:
     max_size_mb: 50
     ttl_seconds: 300
     
-  # Logging
+  # Logging Configuration
   logging:
-    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
-    file: "/var/log/smart_glasses.log"
+    level: "INFO"
+    file: "/var/log/optic-one.log"
     max_size_mb: 10
     
 features:
@@ -73,10 +73,10 @@ features:
   # Translation Settings
   translation:
     source_lang: "auto"
-    target_lang: "fr"
+    target_lang: "en"
     
   # Notification Settings
   notifications:
     max_queue: 10
-    display_duration: 5  # secondes
+    display_duration: 5
     priority_levels: ["low", "medium", "high", "urgent"]

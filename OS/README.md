@@ -1,398 +1,514 @@
-# Smart Glasses OS
+# Optic One
 
-Système d'exploitation personnalisé pour lunettes intelligentes basé sur Raspberry Pi 3 avec IA locale (Ollama).
+Optic One is an advanced open-source wearable computing platform designed to bridge the gap between embedded systems and augmented reality. Unlike consumer-grade smart glasses, Optic One is a standalone ARM-based hardware project that prioritizes transparency, modularity, and low-latency system performance.
 
-## 🎯 Fonctionnalités
+Built on top of a stripped-down Raspberry Pi OS Lite distribution, the project aims to provide a functional heads-up display (HUD) capable of real-time data visualization and AI-driven contextual assistance without requiring an external smartphone tether.
 
-- ✅ **Affichage OLED** - Interface visuelle optimisée
-- ✅ **Vision par caméra** - Analyse de scène avec IA
-- ✅ **Reconnaissance vocale** - Commandes et transcription (Whisper)
-- ✅ **Traduction temps réel** - Texte visible traduit instantanément
-- ✅ **IA locale** - Ollama avec modèles légers pour Pi 3
-- ✅ **Notifications** - Système de queue intelligent
-- ✅ **Gestion des ressources** - Monitoring et throttling automatique
+## Technical Architecture
 
-## 🛠️ Matériel Recommandé
+### Operating System and Kernel
 
-### Minimum
-- Raspberry Pi 3 (1GB RAM)
-- Carte SD 16GB minimum (32GB recommandé)
-- Alimentation 5V 2.5A
+The software core, OpticOS, is a highly optimized Linux environment. It bypasses the standard X11 or Wayland desktop environments to interact directly with the framebuffer and GPIO pins, ensuring maximum CPU cycles are dedicated to AI processing and display stability.
 
-### Recommandé pour Smart Glasses
-- **Écran OLED**: SSD1306 128x64 I2C (~10€)
-  - Connexions: VCC, GND, SDA (GPIO 2), SCL (GPIO 3)
-  - Adresse I2C: 0x3C ou 0x3D
-  
-- **Caméra**: 
-  - Raspberry Pi Camera Module v2 (meilleure qualité)
-  - OU USB Webcam compatible
+- **Base Distribution**: Raspberry Pi OS Lite (64-bit)
+- **Process Management**: Custom systemd services for automated boot-to-script execution
+- **Network Stack**: Optimized SSH over Wi-Fi/Bluetooth for headless development and real-time log monitoring
 
-- **Microphone**: USB ou HAT compatible
-  - Exemple: ReSpeaker 2-Mics Pi HAT
+### Hardware Infrastructure
 
-### Alternative : Écran OLED
-- **SSD1351** 128x128 RGB couleur (meilleure lisibilité)
-- **SH1106** 128x64 (compatible avec SSD1306)
+The hardware is designed for balance, heat dissipation, and optical clarity.
 
-## 📦 Installation
+- **Compute Unit**: Raspberry Pi 3 Model B+ or Pi Zero 2W
+- **Display Interface**: 0.96" or 1.3" Micro-OLED via SPI/I2C protocols (SSD1306 or SH1106 controllers)
+- **Optics**: 45-degree beam splitter prism integrated into a custom-engineered optical engine
+- **Power Management**: 5V DC input via regulated Li-Po battery pack
 
-### 1. Préparation du Raspberry Pi
+### Software Stack
+
+- **Language**: Python 3.11+ for main logic; C++ for performance-critical display drivers
+- **Libraries**: Luma.OLED for display rendering, OpenAI Whisper for voice recognition
+- **AI Integration**: Ollama for local LLM inference with optimized models for ARM architecture
+
+## Core Features
+
+- **OLED Display Management**: Optimized rendering pipeline with framebuffer caching
+- **Computer Vision**: Real-time scene analysis with local AI models
+- **Voice Recognition**: Offline speech-to-text using Whisper (tiny model)
+- **Real-Time Translation**: OCR and translation of visible text
+- **Resource Management**: Intelligent CPU/RAM throttling and thermal monitoring
+- **Notification System**: Priority-based message queue with configurable display duration
+
+## Hardware Requirements
+
+### Minimum Configuration
+
+- Raspberry Pi 3 Model B+ (1GB RAM)
+- microSD card (16GB minimum, Class 10)
+- 5V 2.5A power supply
+
+### Recommended Components
+
+**Display Module**
+- SSD1306 128x64 OLED (I2C interface)
+- I2C Address: 0x3C or 0x3D
+- Operating Voltage: 3.3V - 5V
+
+**Camera Module**
+- Raspberry Pi Camera Module v2 (preferred)
+- Alternative: USB webcam (640x480 minimum)
+
+**Audio Input**
+- USB microphone
+- Alternative: ReSpeaker 2-Mics Pi HAT
+
+**Power Supply (Portable)**
+- 10,000mAh USB power bank
+- Output: 5V 2.5A minimum (3A recommended)
+
+## Installation
+
+### System Preparation
 
 ```bash
-# Téléchargez et flashez Raspberry Pi OS Lite sur SD
-# https://www.raspberrypi.com/software/
+# Flash Raspberry Pi OS Lite (64-bit) to SD card
+# Enable SSH and configure WiFi in Raspberry Pi Imager advanced options
 
-# Première connexion
+# Connect via SSH
 ssh pi@raspberrypi.local
-# Mot de passe par défaut: raspberry
 
-# Changez le mot de passe
+# Change default password
 passwd
 
-# Configurez le hostname
-sudo raspi-config
-# System Options > Hostname > smart-glasses
+# Update system
+sudo apt update && sudo apt upgrade -y
 ```
 
-### 2. Installation du système
+### Automated Installation
 
 ```bash
-# Clonez ou copiez les fichiers
-mkdir ~/smart_glasses_os
-cd ~/smart_glasses_os
+# Clone repository
+git clone https://github.com/username/optic-one.git
+cd optic-one
 
-# Copiez tous les fichiers du projet ici
-
-# Rendez le script d'installation exécutable
+# Make installation script executable
 chmod +x install.sh
 
-# Lancez l'installation
+# Run installation
 ./install.sh
 ```
 
-Le script va installer :
-- Dépendances système (I2C, audio, vidéo)
-- Python packages (OpenCV, Whisper, Luma, etc.)
-- Ollama (optionnel)
-- Modèles IA (llama3.2:1b, llava:7b)
+The installation script will:
+- Install system dependencies (I2C, audio, video libraries)
+- Create Python virtual environment
+- Install required Python packages
+- Configure I2C interface
+- Download and configure Ollama with optimized models
+- Set up systemd service for auto-start
 
-### 3. Configuration matérielle
-
-#### Écran OLED I2C
+### Manual Installation
 
 ```bash
-# Activez I2C (si pas fait par install.sh)
+# Install system dependencies
+sudo apt install -y python3-pip python3-venv python3-dev \
+    libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev \
+    libopenjp2-7 libtiff5 libatlas-base-dev portaudio19-dev \
+    ffmpeg i2c-tools python3-smbus
+
+# Enable I2C
 sudo raspi-config
 # Interface Options > I2C > Enable
 
-# Redémarrez
-sudo reboot
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-# Détectez l'adresse de l'écran
-i2cdetect -y 1
+# Install Python dependencies
+pip install -r requirements.txt
 
-# Devrait afficher quelque chose comme:
-#      0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
-# 00:          -- -- -- -- -- -- -- -- -- -- -- -- -- 
-# ...
-# 30: -- -- -- -- -- -- -- -- -- -- -- -- 3c -- -- --
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Download AI models
+ollama pull llama3.2:1b
+ollama pull llava:7b
 ```
 
-#### Caméra
+### Hardware Configuration
 
+**OLED Display (I2C)**
+
+```
+Connection Map:
+VCC  -> Pin 1 (3.3V) or Pin 2 (5V)
+GND  -> Pin 6 (Ground)
+SDA  -> Pin 3 (GPIO 2)
+SCL  -> Pin 5 (GPIO 3)
+```
+
+Verify I2C connection:
 ```bash
-# Pour Raspberry Pi Camera Module
+i2cdetect -y 1
+# Should display address 0x3C or 0x3D
+```
+
+**Camera Module**
+
+For Raspberry Pi Camera Module:
+```bash
 sudo raspi-config
 # Interface Options > Camera > Enable
-
-# Pour USB webcam
-ls /dev/video*
-# Devrait afficher /dev/video0
+sudo reboot
 ```
 
-#### Microphone
+For USB webcam:
+```bash
+ls /dev/video*
+# Should show /dev/video0
+```
+
+**Microphone**
 
 ```bash
-# Listez les devices audio
+# List audio devices
 arecord -l
 
-# Testez l'enregistrement
+# Test recording
 arecord -d 5 test.wav
 aplay test.wav
 ```
 
-### 4. Configuration
+## Configuration
 
-Éditez `config.yaml` selon votre matériel :
+Edit `config.yaml` to match your hardware setup:
 
 ```yaml
 hardware:
   display:
-    type: "SSD1306"        # Votre modèle d'écran
-    i2c_address: 0x3C      # Adresse détectée avec i2cdetect
+    type: "SSD1306"
     width: 128
     height: 64
+    i2c_address: 0x3C
+    i2c_bus: 1
   
   camera:
-    device: "/dev/video0"  # Ou 0 pour Pi Camera
+    device: "/dev/video0"
     resolution: [640, 480]
     framerate: 15
   
   microphone:
-    device: "default"      # Ou nom du device
+    device: "default"
+    sample_rate: 16000
 
 ai:
   ollama:
-    model: "llama3.2:1b"   # Modèle léger pour Pi 3
+    base_url: "http://localhost:11434"
+    model: "llama3.2:1b"
+    timeout: 30
   
   vision:
-    model: "llava:7b"      # Pour analyse d'images
+    model: "llava:7b"
   
   whisper:
-    model: "tiny"          # tiny, base, small (tiny = plus rapide)
+    model: "tiny"
+    language: "en"
+
+system:
+  resources:
+    max_cpu_percent: 80
+    max_ram_mb: 700
+    enable_throttling: true
 ```
 
-## 🚀 Utilisation
+## Usage
 
-### Mode interactif
+### Interactive Mode
 
 ```bash
-cd ~/smart_glasses_os
+cd optic-one
 source venv/bin/activate
 python main.py
 ```
 
-Commandes disponibles :
-- `view` - Analyser la vue actuelle
-- `read` - Lire le texte visible
-- `trans` - Traduire le texte visible
-- `find X` - Chercher un objet X
-- `voice` - Commande vocale
-- `chat` - Discuter avec l'IA
-- `stats` - Statistiques système
-- `quit` - Quitter
+Available commands:
+- `view` - Analyze current camera view
+- `read` - Read visible text (OCR)
+- `trans` - Translate visible text
+- `find <object>` - Search for specific object
+- `voice` - Listen for voice command
+- `chat` - Interact with AI
+- `stats` - Display system statistics
+- `quit` - Exit application
 
-### Mode démo
+### Demo Mode
 
 ```bash
 python main.py --demo
 ```
 
-Démontre toutes les fonctionnalités.
+Demonstrates all core functionalities in sequence.
 
-### Mode contrôle vocal
+### Voice Control Mode
 
 ```bash
 python main.py --voice-control
 ```
 
-Dites "lunettes" pour activer, puis :
-- "Quelle heure ?"
-- "Que vois-tu ?"
-- "Lis le texte"
-- "Traduis"
-- "Cherche [objet]"
-- "Aide"
+Voice activation workflow:
+1. Say wake word "optic" to activate
+2. Issue command (e.g., "what time is it", "describe view", "read text")
+3. System processes and responds
 
-### Mode simulation (sans hardware)
+### Simulation Mode
 
 ```bash
 python main.py --simulation
 ```
 
-Parfait pour tester sans écran/caméra/micro.
+Run without physical hardware for development and testing.
 
-### Démarrage automatique
+### System Service
 
-```bash
-# Active le service
-sudo systemctl enable smart-glasses
-sudo systemctl start smart-glasses
-
-# Vérifier le statut
-sudo systemctl status smart-glasses
-
-# Logs
-sudo journalctl -u smart-glasses -f
-```
-
-## 📁 Structure du projet
-
-```
-smart_glasses_os/
-├── config.yaml              # Configuration
-├── main.py                  # Point d'entrée
-├── install.sh               # Script d'installation
-│
-├── smart_glasses_os.py      # Service principal
-├── display_manager.py       # Gestion OLED
-├── camera_manager.py        # Vision par caméra
-├── voice_recognizer.py      # Reconnaissance vocale
-├── ollama_client.py         # Client API Ollama
-├── resource_manager.py      # Monitoring ressources
-│
-└── requirements.txt         # Dépendances Python
-```
-
-## 🔧 Optimisation pour Pi 3
-
-Le système est optimisé pour les ressources limitées :
-
-- **CPU** : Throttling automatique si > 80%
-- **RAM** : Limite à 700MB, cache intelligent
-- **Résolution** : Images réduites (640x480)
-- **Modèles IA** : Versions légères (1B params)
-- **Framerate** : Limité à 15 FPS
-
-### Conseils de performance
-
-1. **Désactivez les fonctionnalités non utilisées**
-   ```yaml
-   features:
-     voice_recognition: false  # Si pas de micro
-     camera_vision: false      # Si pas de caméra
-   ```
-
-2. **Réduisez la résolution**
-   ```yaml
-   camera:
-     resolution: [320, 240]    # Plus rapide
-   ```
-
-3. **Modèle Whisper plus petit**
-   ```yaml
-   whisper:
-     model: "tiny"  # Le plus rapide
-   ```
-
-4. **Overclocking modéré** (optionnel)
-   ```bash
-   # /boot/config.txt
-   arm_freq=1350
-   over_voltage=2
-   ```
-
-## 🐛 Dépannage
-
-### L'écran ne s'affiche pas
+Enable automatic startup:
 
 ```bash
-# Vérifiez I2C
+sudo systemctl enable optic-one
+sudo systemctl start optic-one
+
+# Check status
+sudo systemctl status optic-one
+
+# View logs
+sudo journalctl -u optic-one -f
+```
+
+## Project Structure
+
+```
+optic-one/
+├── config.yaml              # System configuration
+├── main.py                  # Application entry point
+├── install.sh               # Automated installation script
+├── requirements.txt         # Python dependencies
+│
+├── core/
+│   ├── optic_os.py         # Main system orchestrator
+│   ├── display_mgr.py      # OLED display management
+│   ├── camera_mgr.py       # Camera and vision processing
+│   ├── voice_recog.py      # Voice recognition engine
+│   ├── ollama_client.py    # AI model interface
+│   └── resource_mgr.py     # System resource monitoring
+│
+├── examples/
+│   ├── accessibility.py    # Accessibility assistant
+│   ├── translator.py       # Real-time translator
+│   └── voice_assistant.py  # Voice-controlled assistant
+│
+└── docs/
+    ├── HARDWARE.md         # Hardware assembly guide
+    ├── QUICKSTART.md       # Quick start guide
+    └── API.md              # API documentation
+```
+
+## Performance Optimization
+
+### Raspberry Pi 3 Specific
+
+The system is optimized for resource-constrained environments:
+
+- **CPU Throttling**: Automatic reduction when usage exceeds 80%
+- **Memory Management**: 700MB limit with intelligent caching
+- **Image Processing**: Reduced resolution (640x480) for faster processing
+- **AI Models**: Lightweight variants (1B parameters for text, 7B for vision)
+- **Frame Rate**: Limited to 15 FPS to conserve CPU cycles
+
+### Performance Tuning
+
+Disable unused features:
+```yaml
+features:
+  voice_recognition: false
+  camera_vision: false
+```
+
+Reduce camera resolution:
+```yaml
+camera:
+  resolution: [320, 240]
+```
+
+Use smallest Whisper model:
+```yaml
+whisper:
+  model: "tiny"
+```
+
+Optional overclocking (use with caution):
+```bash
+# /boot/config.txt
+arm_freq=1350
+over_voltage=2
+```
+
+## Troubleshooting
+
+### Display Issues
+
+```bash
+# Verify I2C connection
 sudo i2cdetect -y 1
 
-# Testez les connexions
-# VCC → 3.3V ou 5V
-# GND → GND
-# SDA → GPIO 2 (Pin 3)
-# SCL → GPIO 3 (Pin 5)
+# Check wiring
+# VCC -> 3.3V/5V
+# GND -> Ground
+# SDA -> GPIO 2
+# SCL -> GPIO 3
 
-# Logs
-tail -f /var/log/smart_glasses.log
+# Review logs
+tail -f /var/log/optic-one.log
 ```
 
-### La caméra ne fonctionne pas
+### Camera Not Detected
 
 ```bash
-# Vérifiez la détection
-vcgencmd get_camera  # Pi Camera
-ls /dev/video*       # USB Webcam
+# Raspberry Pi Camera
+vcgencmd get_camera
 
-# Testez avec
+# USB Webcam
+ls /dev/video*
+
+# Test capture
 raspistill -o test.jpg  # Pi Camera
 fswebcam test.jpg       # USB Webcam
 ```
 
-### Ollama ne répond pas
+### Ollama Connection Failed
 
 ```bash
-# Démarrez Ollama
+# Start Ollama service
 ollama serve
 
-# Testez
+# Test API
 curl http://localhost:11434/api/generate -d '{
   "model": "llama3.2:1b",
   "prompt": "Hello"
 }'
 ```
 
-### Pas assez de RAM
+### Insufficient Memory
 
 ```bash
-# Augmentez le swap
+# Increase swap space
 sudo dphys-swapfile swapoff
 sudo nano /etc/dphys-swapfile
-# CONF_SWAPSIZE=2048
+# Set: CONF_SWAPSIZE=2048
 sudo dphys-swapfile setup
 sudo dphys-swapfile swapon
-
-# Ou désactivez des fonctionnalités
 ```
 
-## 📝 Exemples d'utilisation
+## Engineering and Manufacturing
 
-### 1. Lecture de panneaux
+### CAD and Mechanical Design
 
-```python
-os_instance.read_text_in_view()
-# Affiche: "SORTIE DE SECOURS"
-```
+The chassis is modeled using Autodesk Fusion 360, focusing on ergonomics and component housing.
 
-### 2. Traduction en temps réel
+- **Tolerance Management**: 0.2mm precision for press-fit component mounting
+- **Material Science**: Structural parts printed in PETG or Carbon-Fiber PLA for thermal resistance and mechanical rigidity
+- **Slicing Optimization**: Profile-specific settings in OrcaSlicer to ensure interlayer adhesion and dimensional accuracy
 
-```python
-os_instance.translate_view(target_lang='en')
-# "SORTIE DE SECOURS" → "EMERGENCY EXIT"
-```
+### Bill of Materials
 
-### 3. Recherche d'objets
+| Component | Specification | Quantity | Est. Cost |
+|-----------|--------------|----------|-----------|
+| Raspberry Pi 3 B+ | 1GB RAM | 1 | $35 |
+| microSD Card | 32GB Class 10 | 1 | $10 |
+| OLED Display | SSD1306 128x64 I2C | 1 | $8 |
+| Pi Camera v2 | 8MP | 1 | $25 |
+| USB Microphone | 16kHz | 1 | $10 |
+| Power Bank | 10000mAh | 1 | $20 |
+| Jumper Wires | F-F 10cm | 10 | $3 |
+| **Total** | | | **~$111** |
 
-```python
-os_instance.find_object_by_name("clés")
-# "Oui, il y a des clés sur la table à droite"
-```
+## Project Roadmap
 
-### 4. Assistant de navigation
+### Phase 1: Prototype Foundation (Current)
+- Core OpticOS implementation
+- SPI/I2C display integration
+- Basic text rendering and UI
+- Initial 3D frame prototyping
 
-```python
-os_instance.camera.get_navigation_hints()
-# "Couloir droit devant, porte à gauche dans 3 mètres"
-```
+### Phase 2: Intelligence Integration
+- Voice-to-text processing pipeline
+- Real-time AI response integration
+- Power optimization and thermal management
+- Advanced notification system
 
-## 🔐 Sécurité
+### Phase 3: Computer Vision
+- Camera module integration
+- Object recognition capabilities
+- Heads-up navigation system
+- OCR and translation features
 
-- Changez le mot de passe par défaut
-- Configurez le firewall si connexion réseau
-- Données IA traitées localement (pas de cloud)
-- Logs en `/var/log/smart_glasses.log`
+### Phase 4: Production Ready
+- PCB design for custom hardware
+- Injection-molded housing
+- Battery management system
+- Mobile app companion
 
-## 📄 Licence
+## Development Environment
 
-Ce projet est fourni à des fins éducatives.
+### Prerequisites
 
-## 🤝 Contribution
+- Unix-based system (macOS ARM or Linux recommended)
+- Raspberry Pi Imager
+- VS Code with Remote-SSH extension
+- Python 3.11+
 
-Améliorations bienvenues :
-- Support d'autres écrans (e-ink, TFT)
-- Nouveaux modèles IA
-- Optimisations performances
-- Nouvelles fonctionnalités
+### Contributing
 
-## 📞 Support
+Contributions are welcome. Please follow these guidelines:
 
-Pour questions ou problèmes :
-1. Vérifiez les logs
-2. Mode simulation pour isoler le problème
-3. Testez chaque composant séparément
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/improvement`)
+3. Commit changes (`git commit -am 'Add new feature'`)
+4. Push to branch (`git push origin feature/improvement`)
+5. Create Pull Request
 
-## 🎓 Ressources
+### Code Style
+
+- Python: Follow PEP 8 guidelines
+- Maximum line length: 100 characters
+- Use type hints for function signatures
+- Document all public methods with docstrings
+
+## License
+
+This project is licensed under the MIT License. See LICENSE file for details.
+
+## Security
+
+- Change default Raspberry Pi password immediately
+- Configure firewall for network exposure
+- AI processing occurs locally (no cloud dependencies)
+- Logs stored in `/var/log/optic-one.log`
+
+## Resources
 
 - [Raspberry Pi Documentation](https://www.raspberrypi.com/documentation/)
-- [Luma.OLED](https://luma-oled.readthedocs.io/)
-- [Ollama](https://ollama.com/)
-- [Whisper](https://github.com/openai/whisper)
-- [OpenCV](https://docs.opencv.org/)
+- [Luma.OLED Library](https://luma-oled.readthedocs.io/)
+- [Ollama Documentation](https://ollama.com/)
+- [OpenAI Whisper](https://github.com/openai/whisper)
+- [OpenCV Documentation](https://docs.opencv.org/)
+
+## Support
+
+For issues and questions:
+1. Check system logs
+2. Run in simulation mode to isolate hardware issues
+3. Test each component individually
+4. Open an issue on GitHub with detailed information
 
 ---
 
-**Bon développement ! 🤓👓**
+**Project Status**: Alpha (Active Development)  
+**Last Updated**: February 2026  
+**Maintainer**: [Your Name/Organization]
