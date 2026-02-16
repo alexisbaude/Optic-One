@@ -1,0 +1,82 @@
+# Configuration pour Smart Glasses OS
+# Raspberry Pi 3 - Optimisé pour ressources limitées
+
+hardware:
+  # OLED Display Configuration
+  display:
+    type: "SSD1306"  # Recommandé: SSD1306 128x64 I2C (bon compromis qualité/prix)
+    width: 128
+    height: 64
+    i2c_address: 0x3C
+    i2c_bus: 1
+    rotation: 0  # 0, 90, 180, 270
+    
+  # Camera Configuration
+  camera:
+    enabled: true
+    resolution: [640, 480]  # Réduit pour économiser ressources
+    framerate: 15  # Limité pour économiser CPU
+    device: "/dev/video0"
+    
+  # Microphone Configuration (pour reconnaissance vocale)
+  microphone:
+    enabled: true
+    sample_rate: 16000
+    channels: 1
+    device: "default"
+
+ai:
+  # Ollama Configuration
+  ollama:
+    base_url: "http://localhost:11434"
+    model: "llama3.2:1b"  # Modèle léger pour Pi 3
+    timeout: 30
+    max_tokens: 256  # Limité pour économiser ressources
+    temperature: 0.7
+    
+  # Vision Model (pour analyse d'images)
+  vision:
+    model: "llava:7b"  # Modèle vision léger
+    enabled: true
+    
+  # Whisper pour reconnaissance vocale
+  whisper:
+    model: "tiny"  # tiny, base, small (tiny recommandé pour Pi 3)
+    language: "fr"
+
+system:
+  # Resource Management
+  resources:
+    max_cpu_percent: 80
+    max_ram_mb: 700  # Pi 3 a 1GB RAM, laisse ~300MB pour le système
+    enable_throttling: true
+    
+  # Cache Settings
+  cache:
+    enabled: true
+    max_size_mb: 50
+    ttl_seconds: 300
+    
+  # Logging
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    file: "/var/log/smart_glasses.log"
+    max_size_mb: 10
+    
+features:
+  # Feature Toggles
+  voice_recognition: true
+  camera_vision: true
+  text_notifications: true
+  translation: true
+  
+  # Translation Settings
+  translation:
+    source_lang: "auto"
+    target_lang: "fr"
+    
+  # Notification Settings
+  notifications:
+    max_queue: 10
+    display_duration: 5  # secondes
+    priority_levels: ["low", "medium", "high", "urgent"]
