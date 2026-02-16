@@ -1,8 +1,26 @@
-# Optic One Configuration
-# Optimized for Raspberry Pi 3 Model B+
+# Optic One v2.0 - Advanced Configuration
+# Next-generation wearable computing platform
+
+system:
+  version: "2.0.0"
+  device_name: "optic-one"
+  
+  # Performance and Resource Management
+  resources:
+    max_cpu_percent: 85
+    max_ram_mb: 800
+    enable_throttling: true
+    performance_mode: "balanced"  # eco, balanced, performance
+    
+  # Logging
+  logging:
+    level: "INFO"
+    file: "/var/log/optic-one.log"
+    max_size_mb: 20
+    console_output: true
 
 hardware:
-  # OLED Display Configuration
+  # Display Configuration (Right Eye OLED)
   display:
     type: "SSD1306"
     width: 128
@@ -10,73 +28,185 @@ hardware:
     i2c_address: 0x3C
     i2c_bus: 1
     rotation: 0
+    brightness: 255
+    contrast: 255
     
   # Camera Configuration
   camera:
     enabled: true
-    resolution: [640, 480]
-    framerate: 15
+    resolution: [1280, 720]
+    framerate: 30
     device: "/dev/video0"
+    auto_focus: true
+    exposure: "auto"
     
-  # Microphone Configuration
+  # Audio Configuration
   microphone:
     enabled: true
     sample_rate: 16000
     channels: 1
     device: "default"
+    noise_cancellation: true
+    
+  speaker:
+    enabled: true
+    device: "default"
+    volume: 70
+    
+  # Battery Management System
+  battery:
+    enabled: true
+    monitor_interval: 30
+    voltage_pin: null  # GPIO pin for voltage monitoring (if available)
+    current_pin: null  # GPIO pin for current monitoring (if available)
+    i2c_address: null  # I2C address if using battery HAT
+    low_battery_threshold: 20
+    critical_battery_threshold: 10
+    alert_enabled: true
 
 ai:
-  # Ollama Configuration
+  # Ollama Configuration (Local LLM)
   ollama:
     base_url: "http://localhost:11434"
-    model: "llama3.2:1b"
-    timeout: 30
-    max_tokens: 256
+    model: "llama3.2:3b"  # Upgraded to 3B for better responses
+    timeout: 15  # Reduced for near-instant responses
+    max_tokens: 512
     temperature: 0.7
+    stream: true  # Enable streaming for faster perceived responses
+    num_ctx: 2048  # Context window
     
-  # Vision Model Configuration
+  # Vision Model (Image Recognition)
   vision:
     model: "llava:7b"
     enabled: true
+    recognition_confidence: 0.6
+    max_detections: 10
+    categories: ["person", "object", "text", "scene"]
     
-  # Whisper Configuration
+  # Voice Recognition
   whisper:
-    model: "tiny"
+    model: "base"  # Upgraded from tiny for better accuracy
     language: "en"
+    task: "transcribe"
+    
+  # Response Optimization
+  optimization:
+    cache_responses: true
+    cache_ttl: 300
+    preload_common_queries: true
+    parallel_processing: true
 
-system:
-  # Resource Management
-  resources:
-    max_cpu_percent: 80
-    max_ram_mb: 700
-    enable_throttling: true
-    
-  # Cache Settings
-  cache:
-    enabled: true
-    max_size_mb: 50
-    ttl_seconds: 300
-    
-  # Logging Configuration
-  logging:
-    level: "INFO"
-    file: "/var/log/optic-one.log"
-    max_size_mb: 10
+ui:
+  # Interface Configuration
+  theme: "dark"  # dark, light, auto
+  font_size: "medium"  # small, medium, large
+  animation_speed: "fast"  # slow, normal, fast, off
+  
+  # Navigation
+  gesture_control: true
+  voice_control: true
+  button_control: false  # Physical buttons if available
+  
+  # Layout
+  layout: "minimal"  # minimal, standard, detailed
+  show_battery: true
+  show_time: true
+  show_notifications: true
+  
+  # Home Screen
+  home:
+    quick_access:
+      - "ai_assistant"
+      - "camera"
+      - "music"
+      - "store"
+    recent_apps: 4
     
 features:
-  # Feature Toggles
-  voice_recognition: true
-  camera_vision: true
-  text_notifications: true
+  # Core Features
+  ai_assistant: true
+  image_recognition: true
+  voice_commands: true
+  text_reading: true
   translation: true
   
-  # Translation Settings
-  translation:
-    source_lang: "auto"
-    target_lang: "en"
-    
-  # Notification Settings
+  # Media Features
+  music_player: true
+  spotify_integration: true
+  
+  # App Ecosystem
+  app_store: true
+  third_party_apps: true
+  
+  # Notifications
   notifications:
-    max_queue: 10
+    enabled: true
+    max_queue: 15
     display_duration: 5
     priority_levels: ["low", "medium", "high", "urgent"]
+    smart_filtering: true
+
+apps:
+  # App Store Configuration
+  store:
+    enabled: true
+    repository_url: "https://store.optic-one.dev/apps"
+    auto_update: false
+    allow_sideload: true
+    installed_apps_dir: "/home/pi/optic-one-v2/apps/installed"
+    
+  # Spotify Integration
+  spotify:
+    enabled: true
+    client_id: ""  # User must configure
+    client_secret: ""  # User must configure
+    redirect_uri: "http://localhost:8888/callback"
+    scope: "user-read-playback-state,user-modify-playback-state,user-read-currently-playing"
+    cache_path: "/home/pi/.spotify_cache"
+    
+  # Built-in Apps
+  builtin:
+    assistant:
+      enabled: true
+      wake_word: "optic"
+      continuous_listening: false
+      
+    camera:
+      enabled: true
+      auto_capture: false
+      save_directory: "/home/pi/optic-captures"
+      
+    music:
+      enabled: true
+      default_source: "spotify"  # spotify, local
+      
+    browser:
+      enabled: false  # Web browsing capability
+      
+network:
+  # Connectivity
+  wifi:
+    enabled: true
+    auto_connect: true
+    
+  bluetooth:
+    enabled: true
+    discoverable: false
+    
+  # API Endpoints
+  api:
+    enabled: false
+    port: 8080
+    authentication: true
+    
+security:
+  # Security Settings
+  require_unlock: false
+  unlock_method: "voice"  # voice, pattern, pin
+  data_encryption: false
+  secure_boot: false
+  
+  # Privacy
+  camera_indicator: true
+  microphone_indicator: true
+  location_services: false
