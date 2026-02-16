@@ -1,4 +1,4 @@
-Voici une structure de README.md complète, technique et exhaustive, calquée sur les standards des grands projets open-source que l'on trouve sur GitHub (comme ceux de la fondation Raspberry Pi ou d'Adafruit). Elle est conçue pour poser les bases de Optic One de manière ultra-professionnelle.
+
 
 Optic One
 Optic One is an advanced open-source wearable computing platform designed to bridge the gap between embedded systems and augmented reality. Unlike consumer-grade smart glasses, Optic One is a standalone, ARM-based hardware project that prioritizes transparency, modularity, and low-latency system performance.
